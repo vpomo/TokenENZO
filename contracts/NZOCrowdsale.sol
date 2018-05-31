@@ -268,8 +268,8 @@ contract Ownable {
  */
 
 contract MintableToken is StandardToken, Ownable {
-    string public constant name = "BlockGain Fund Token";
-    string public constant symbol = "BGF";
+    string public constant name = "ENZO";
+    string public constant symbol = "NZO";
     uint8 public constant decimals = 18;
 
     event Mint(address indexed to, uint256 amount);
@@ -352,16 +352,13 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     enum State {Active, Closed}
     State public state;
 
-    // https://www.coingecko.com/en/coins/ethereum
-    //$0.09 = 1 token => $ 1,000 = 1.332019074513147 ETH =>
-    //11,111.11 token = 1.5863699097355521 ETH => 1 ETH = 11,111.1/1.332019074513147 = 8342
-    uint256 public rate  = 8342;
+    uint256 public rate  = 12500;
 
     mapping (address => uint256) public deposited;
     mapping(address => bool) public whitelist;
 
-    uint256 public constant INITIAL_SUPPLY = 166666667 * (10 ** uint256(decimals));
-    uint256 public fundForSale = 161666667 * (10 ** uint256(decimals));
+    uint256 public constant INITIAL_SUPPLY = 21 * 10**9 * (10 ** uint256(decimals));
+    uint256 public fundForSale = 21 * 10**9 * (10 ** uint256(decimals));
 
     uint256 public countInvestor;
 
@@ -478,7 +475,7 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
 
     function validPurchaseTokens(uint256 _weiAmount) public inState(State.Active) returns (uint256) {
         uint256 addTokens = getTotalAmountOfTokens(_weiAmount);
-        if (_weiAmount < 0.05 ether) {
+        if (_weiAmount < 0.5 ether) {
             emit MinWeiLimitReached(msg.sender, _weiAmount);
             return 0;
         }
