@@ -4,15 +4,17 @@ var NZOCrowdsale = artifacts.require("./NZOCrowdsale.sol");
 
 contract('NZOCrowdsale', (accounts) => {
     var contract;
-    //var owner = "0xe0b6a32700c7F9495B698fda5B8E51BEb510a542";
+    //var owner = "0xbcEDB2FAD161284807A4760DDd7Ed92e04CA8dff";
     var owner = accounts[0]; // for test
 
-    var rate = Number(8342);
+    var rate = Number(10/5);
     var buyWei = Number(1 * 10**18);
-    var rateNew = Number(8342);
-    var buyWeiNew = 5 * 10**17;
+    var rateNew = Number(10/5);
+    var buyWeiNew = 6 * 10**17;
     var buyWeiMin = 1 * 10**15;
-    var totalSupply = 161666667 * 10**18;
+    var buyWeiLimitWeekZero = Number(8 * 10**18);
+
+    var fundForSale = 12600 * 10**24;
 
     it('should deployed contract', async ()  => {
         assert.equal(undefined, contract);
@@ -27,16 +29,13 @@ contract('NZOCrowdsale', (accounts) => {
     it('verification balance owner contract', async ()  => {
         var balanceOwner = await contract.balanceOf(owner);
         //console.log("balanceOwner = " + balanceOwner);
-        assert.equal(totalSupply, balanceOwner);
+        assert.equal(fundForSale, balanceOwner);
     });
 
 
     it('verification of receiving Ether', async ()  => {
 
         var tokenAllocatedBefore = await contract.tokenAllocated.call();
-        await contract.addToWhitelist(accounts[2], {from:accounts[0]});
-        var isWhiteList = await contract.whitelist.call(accounts[2]);
-        assert.equal(true, isWhiteList);
         var balanceAccountTwoBefore = await contract.balanceOf(accounts[2]);
         var weiRaisedBefore = await contract.weiRaised.call();
         //console.log("tokenAllocatedBefore = " + tokenAllocatedBefore);
@@ -63,10 +62,6 @@ contract('NZOCrowdsale', (accounts) => {
         //console.log("DepositedAfter = " + depositedAfter);
         assert.equal(buyWei, depositedAfter);
 
-        await contract.addToWhitelist(accounts[3], {from:accounts[0]});
-        var isWhiteList = await contract.whitelist.call(accounts[3]);
-        assert.equal(true, isWhiteList);
-
         var balanceAccountThreeBefore = await contract.balanceOf(accounts[3]);
         await contract.buyTokens(accounts[3],{from:accounts[3], value:buyWeiNew});
         var balanceAccountThreeAfter = await contract.balanceOf(accounts[3]);
@@ -77,44 +72,40 @@ contract('NZOCrowdsale', (accounts) => {
 
         var balanceOwnerAfter = await contract.balanceOf(owner);
         //console.log("balanceOwnerAfter = " + Number(balanceOwnerAfter));
-        //assert.equal(totalSupply - balanceAccountThreeAfter - balanceAccountTwoAfter, balanceOwnerAfter);
+        //assert.equal(fundForSale - balanceAccountThreeAfter - balanceAccountTwoAfter, balanceOwnerAfter);
     });
 
     it('verification define period', async ()  => {
-        var currentDate = 1532476800; // Jul, 25
+        var currentDate = 1528128000; // Jun, 04
         period = await contract.getPeriod(currentDate);
-        assert.equal(10, period);
+        assert.equal(100, period);
 
         currentDate = 1533513600; // Aug, 06
         period = await contract.getPeriod(currentDate);
         assert.equal(0, period);
 
-        currentDate = 1534118400; // Aug, 13
+        currentDate = 1534694400; // Aug, 19
         period = await contract.getPeriod(currentDate);
         assert.equal(1, period);
 
-        currentDate = 1534723200; // Aug, 20
+        currentDate = 1535299200; // Aug, 26
         period = await contract.getPeriod(currentDate);
         assert.equal(2, period);
 
-        currentDate = 1535328000; // Aug, 27
+        currentDate = 1535846400; // Sep, 2
         period = await contract.getPeriod(currentDate);
         assert.equal(3, period);
 
-        currentDate = 1535846400; // Sep, 2
+        currentDate = 1562169600; // Jul, 03, 2019
         period = await contract.getPeriod(currentDate);
-        assert.equal(4, period);
+        assert.equal(46, period);
 
-        currentDate = 1537747200; // Sep, 24
+        currentDate = 1562342400; // Jun, 05
         period = await contract.getPeriod(currentDate);
-        assert.equal(10, period);
+        assert.equal(100, period);
     });
 
     it('verification claim tokens', async ()  => {
-        await contract.addToWhitelist(accounts[1], {from:accounts[0]});
-        var isWhiteList = await contract.whitelist.call(accounts[1]);
-        assert.equal(true, isWhiteList);
-
         var balanceAccountOneBefore = await contract.balanceOf(accounts[1]);
         assert.equal(0, balanceAccountOneBefore);
         await contract.buyTokens(accounts[1],{from:accounts[1], value:buyWei});
@@ -139,23 +130,10 @@ contract('NZOCrowdsale', (accounts) => {
         assert.equal(0, Number(numberTokensMinWey));
     });
 
-    it('verification burning of tokens', async ()  => {
-        var balanceOwnerBefore = await contract.balanceOf(owner);
-        await contract.ownerBurnToken(1*10**18);
-        var balanceOwnerAfter = await contract.balanceOf(owner);
-        assert.equal(true, balanceOwnerBefore > balanceOwnerAfter);
-    });
-
-    it('verification vesting', async ()  => {
-        //await assertRevert(contract.checkVesting(1*10**18, 1553385600)); //24 Mar 2019 00:00:00 GMT
-        var period = await contract.checkVesting(5000*10**18, 1553385600); //24 Mar 2019 00:00:00 GMT
-        assert.equal(1, period);
-        //console.log("period = " + period);
-
-        var period = await contract.checkVesting(5000*10**18, 1569283200); //24 Sep 2019 00:00:00 GMT
-        assert.equal(2, period);
-        //console.log("period = " + period);
-        var period = await contract.checkVesting(5e23, 1569283200); //24 Sep 2019 00:00:00 GMT
+    it('checking the limit of the amount of tokens by stages of sales', async ()  => {
+        var numberTokensLimit = await contract.validPurchaseTokens.call(buyWeiLimitWeekZero);
+        assert.equal(0, Number(numberTokensLimit));
+        //console.log("numberTokensLimit = " + numberTokensLimit);
     });
 
 });

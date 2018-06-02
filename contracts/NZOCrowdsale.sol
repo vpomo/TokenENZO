@@ -323,6 +323,7 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     //100,000 token = 1.7089051044995474 ETH =>
     //1 ETH = 100,000/1.7089051044995474 = 58517
     uint256 public rate  = 58517; // for $0.01
+    //uint256 public rate  = 10; // for test's
 
     mapping (address => uint256) public deposited;
     mapping(address => bool) public whitelist;
@@ -335,6 +336,8 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
 
     uint256 limitWeekZero = 2500000000 * (10 ** uint256(decimals));
     uint256 limitWeekOther = 200000000 * (10 ** uint256(decimals));
+    //uint256 limitWeekZero = 20 * (10 ** uint256(decimals)); // for tests
+    //uint256 limitWeekOther = 10 * (10 ** uint256(decimals)); // for tests
 
     address public addressFundReserve = 0x0;
     address public addressFundFoundation = 0x0;
@@ -342,7 +345,7 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
 
     uint256 public startTime = 1530720000; // Wed, 04 Jul 2018 16:00:00 GMT
     // Eastern Standard Time (EST) + 4 hours = Greenwich Mean Time (GMT))
-    uint numberWeeks = 45;
+    uint numberWeeks = 46;
 
 
     uint256 public countInvestor;
@@ -351,17 +354,15 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     event TokenLimitReached(uint256 tokenRaised, uint256 purchasedToken);
     event MinWeiLimitReached(address indexed sender, uint256 weiAmount);
     event Finalized();
-    event Burn(address indexed burner, uint256 value);
 
     constructor(address _owner) public
     Crowdsale(_owner)
     {
         require(_owner != address(0));
         owner = _owner;
-        owner = msg.sender; // for test's
+        //owner = msg.sender; // for test's
         transfersEnabled = true;
         mintingFinished = false;
-        state = State.Active;
         totalSupply = INITIAL_SUPPLY;
         bool resultMintForOwner = mintForOwner(owner);
         require(resultMintForOwner);
@@ -390,9 +391,10 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         return tokens;
     }
 
-    function getTotalAmountOfTokens(uint256 _weiAmount) internal view returns (uint256) {
+    function getTotalAmountOfTokens(uint256 _weiAmount) internal returns (uint256) {
         uint256 currentDate = now;
-        currentDate = 1533513600; // (06 Aug 2018 00:00:00 GMT) for test's
+        //currentDate = 1533513600; // (06 Aug 2018 00:00:00 GMT) for test's
+        //currentDate = 1534694400; // (19 Aug 2018 00:00:00 GMT) for test's
         uint currentPeriod = getPeriod(currentDate);
         uint256 amountOfTokens = 0;
         if(currentPeriod < 100){
@@ -417,6 +419,9 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     }
 
     function getPeriod(uint256 _currentDate) public view returns (uint) {
+        if( startTime > _currentDate && _currentDate > startTime + 365 days){
+            return 100;
+        }
         if( startTime <= _currentDate && _currentDate <= startTime + 43 days){
             return 0;
         }
@@ -429,7 +434,6 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     }
 
     function deposit(address investor) internal {
-        require(state == State.Active);
         deposited[investor] = deposited[investor].add(msg.value);
     }
 
@@ -464,7 +468,6 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
 
     function finalize() public onlyOwner returns (bool result) {
         result = false;
-        state = State.Closed;
         wallet.transfer(address(this).balance);
         finishMinting();
         emit Finalized();
@@ -476,22 +479,5 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         rate = _newRate;
         return true;
     }
-
-    /**
-     * @dev owner burn Token.
-     * @param _value amount of burnt tokens
-     */
-    function ownerBurnToken(uint _value) public onlyOwner {
-        require(_value > 0);
-        require(_value <= balances[owner]);
-        require(_value <= totalSupply);
-        require(_value <= fundForSale);
-
-        balances[owner] = balances[owner].sub(_value);
-        totalSupply = totalSupply.sub(_value);
-        fundForSale = fundForSale.sub(_value);
-        emit Burn(msg.sender, _value);
-    }
-
 }
 
