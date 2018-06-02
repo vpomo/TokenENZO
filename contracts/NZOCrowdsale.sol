@@ -82,15 +82,6 @@ contract BasicToken is ERC20Basic {
     using SafeMath for uint256;
 
     mapping (address => uint256) balances;
-    address public walletTeam = 0x35cCaeD05CE27739579502B3424364774f18980e;
-    uint256 public fundForTeam =  5*10**6 * (10 ** 18);
-
-    uint256 public startTime = 1533081600; // 01 Aug 2018 00:00:00 GMT
-    uint256 endTime = startTime + 35 days;
-    uint256 firstRelease = endTime + 26 weeks;
-    uint256 secondRelease = firstRelease + 26 weeks;
-    uint256 thirdRelease = secondRelease + 26 weeks;
-    uint256 fourthRelease = thirdRelease + 26 weeks;
 
     /**
     * Protection against short address attack
@@ -107,9 +98,6 @@ contract BasicToken is ERC20Basic {
     */
     function transfer(address _to, uint256 _value) public onlyPayloadSize(2) returns (bool) {
         require(_to != address(0));
-        if (msg.sender == walletTeam) {
-            checkVesting(_value, now);
-        }
         require(_value <= balances[msg.sender]);
         require(transfersEnabled);
 
@@ -128,27 +116,6 @@ contract BasicToken is ERC20Basic {
     function balanceOf(address _owner) public constant returns (uint256 balance) {
         return balances[_owner];
     }
-
-    function checkVesting(uint256 _value, uint256 _currentTime) public view returns(uint8 period) {
-        require(firstRelease <= _currentTime);
-        if (firstRelease <= _currentTime && _currentTime < secondRelease) {
-            period = 1;
-            require(balances[walletTeam].sub(_value) > fundForTeam.mul(3).div(4));
-        }
-        if (secondRelease <= _currentTime && _currentTime < thirdRelease) {
-            period = 2;
-            require(balances[walletTeam].sub(_value) > fundForTeam.mul(2).div(4));
-        }
-        if (thirdRelease <= _currentTime && _currentTime < fourthRelease) {
-            period = 3;
-            require(balances[walletTeam].sub(_value) > fundForTeam.mul(1).div(4));
-        }
-        if (fourthRelease <= _currentTime) {
-            period = 4;
-            require(balances[walletTeam].sub(_value) >= 0);
-        }
-    }
-
 }
 
 
@@ -349,16 +316,34 @@ contract Crowdsale is Ownable {
 contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     using SafeMath for uint256;
 
-    enum State {Active, Closed}
-    State public state;
-
-    uint256 public rate  = 12500;
+    // https://www.coingecko.com/en/coins/ethereum
+    // For June 02, 2018
+    //$0.01 = 1 token => $ 1,000 = 1.7089051044995474 ETH =>
+    // 1,000 / 0.01 = 100,000 token = 1.7089051044995474 ETH =>
+    //100,000 token = 1.7089051044995474 ETH =>
+    //1 ETH = 100,000/1.7089051044995474 = 58517
+    uint256 public rate  = 58517; // for $0.01
 
     mapping (address => uint256) public deposited;
     mapping(address => bool) public whitelist;
 
     uint256 public constant INITIAL_SUPPLY = 21 * 10**9 * (10 ** uint256(decimals));
-    uint256 public fundForSale = 21 * 10**9 * (10 ** uint256(decimals));
+    uint256 public    fundForSale = 12600 * 10**6 * (10 ** uint256(decimals));
+    uint256 public    fundReserve = 5250000000 * (10 ** uint256(decimals));
+    uint256 public fundFoundation = 1000500000 * (10 ** uint256(decimals));
+    uint256 public       fundTeam = 2100000000 * (10 ** uint256(decimals));
+
+    uint256 limitWeekZero = 2500000000 * (10 ** uint256(decimals));
+    uint256 limitWeekOther = 200000000 * (10 ** uint256(decimals));
+
+    address public addressFundReserve = 0x0;
+    address public addressFundFoundation = 0x0;
+    address public addressFundTeam = 0x0;
+
+    uint256 public startTime = 1530720000; // Wed, 04 Jul 2018 16:00:00 GMT
+    // Eastern Standard Time (EST) + 4 hours = Greenwich Mean Time (GMT))
+    uint numberWeeks = 45;
+
 
     uint256 public countInvestor;
 
@@ -382,17 +367,12 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         require(resultMintForOwner);
     }
 
-    modifier inState(State _state) {
-        require(state == _state);
-        _;
-    }
-
     // fallback function can be used to buy tokens
     function() payable public {
         buyTokens(msg.sender);
     }
 
-    function buyTokens(address _investor) public inState(State.Active) payable returns (uint256){
+    function buyTokens(address _investor) public payable returns (uint256){
         require(_investor != address(0));
         uint256 weiAmount = msg.value;
         uint256 tokens = validPurchaseTokens(weiAmount);
@@ -413,24 +393,23 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     function getTotalAmountOfTokens(uint256 _weiAmount) internal view returns (uint256) {
         uint256 currentDate = now;
         currentDate = 1533513600; // (06 Aug 2018 00:00:00 GMT) for test's
-        uint256 currentPeriod = getPeriod(currentDate);
+        uint currentPeriod = getPeriod(currentDate);
         uint256 amountOfTokens = 0;
-        if(currentPeriod < 5){
-            if(whitelist[msg.sender]){
-                if(currentPeriod == 0){
-                    amountOfTokens = _weiAmount.mul(rate);
+        if(currentPeriod < 100){
+            if(currentPeriod == 0){
+                amountOfTokens = _weiAmount.mul(rate).div(4);
+                if (tokenAllocated.add(amountOfTokens) > limitWeekZero) {
+                    emit TokenLimitReached(tokenAllocated, amountOfTokens);
+                    return 0;
                 }
-                if(currentPeriod == 1){
-                    amountOfTokens = _weiAmount.mul(rate).mul(90).div(95);
-                }
-                if(currentPeriod == 2){
-                    amountOfTokens = _weiAmount.mul(rate).mul(90).div(100);
-                }
-                if(currentPeriod == 3){
-                    amountOfTokens = _weiAmount.mul(rate).mul(90).div(105);
-                }
-                if(currentPeriod == 4){
-                    amountOfTokens = _weiAmount.mul(rate).mul(90).div(110);
+            }
+            for(uint j = 0; j < numberWeeks; j++){
+                if(currentPeriod == (j + 1)){
+                    amountOfTokens = _weiAmount.mul(rate).div(5+j*25);
+                    if (tokenAllocated.add(amountOfTokens) > limitWeekZero + limitWeekOther.mul(j)) {
+                        emit TokenLimitReached(tokenAllocated, amountOfTokens);
+                        return 0;
+                    }
                 }
             }
         }
@@ -438,22 +417,15 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     }
 
     function getPeriod(uint256 _currentDate) public view returns (uint) {
-        if( startTime <= _currentDate && _currentDate <= startTime + 7 days){
+        if( startTime <= _currentDate && _currentDate <= startTime + 43 days){
             return 0;
         }
-        if( startTime + 7 days <= _currentDate && _currentDate <= startTime + 14 days){
-            return 1;
+        for(uint j = 0; j < numberWeeks; j++){
+            if( startTime + 43 days + j*7 days <= _currentDate && _currentDate <= startTime + 43 days + (j+1)*7 days){
+                return j + 1;
+            }
         }
-        if( startTime + 14 days <= _currentDate && _currentDate <= startTime + 21 days){
-            return 2;
-        }
-        if( startTime + 21 days <= _currentDate && _currentDate <= startTime + 28 days){
-            return 3;
-        }
-        if( startTime + 28 days <= _currentDate && _currentDate <= startTime + 35 days){
-            return 4;
-        }
-        return 10;
+        return 100;
     }
 
     function deposit(address investor) internal {
@@ -465,7 +437,11 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         result = false;
         require(_walletOwner != address(0));
         balances[_walletOwner] = balances[_walletOwner].add(fundForSale);
-        balances[walletTeam] = balances[walletTeam].add(fundForTeam);
+
+        balances[addressFundTeam] = balances[addressFundTeam].add(fundTeam);
+        balances[addressFundReserve] = balances[addressFundReserve].add(fundReserve);
+        balances[addressFundFoundation] = balances[addressFundFoundation].add(fundFoundation);
+
         result = true;
     }
 
@@ -473,7 +449,7 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         return deposited[_investor];
     }
 
-    function validPurchaseTokens(uint256 _weiAmount) public inState(State.Active) returns (uint256) {
+    function validPurchaseTokens(uint256 _weiAmount) public returns (uint256) {
         uint256 addTokens = getTotalAmountOfTokens(_weiAmount);
         if (_weiAmount < 0.5 ether) {
             emit MinWeiLimitReached(msg.sender, _weiAmount);
@@ -486,7 +462,7 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         return addTokens;
     }
 
-    function finalize() public onlyOwner inState(State.Active) returns (bool result) {
+    function finalize() public onlyOwner returns (bool result) {
         result = false;
         state = State.Closed;
         wallet.transfer(address(this).balance);
@@ -499,33 +475,6 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
         require(_newRate > 0);
         rate = _newRate;
         return true;
-    }
-
-    /**
-    * @dev Adds single address to whitelist.
-    * @param _beneficiary Address to be added to the whitelist
-    */
-    function addToWhitelist(address _beneficiary) external onlyOwner {
-        whitelist[_beneficiary] = true;
-    }
-
-    /**
-     * @dev Adds list of addresses to whitelist. Not overloaded due to limitations with truffle testing.
-     * @param _beneficiaries Addresses to be added to the whitelist
-     */
-    function addManyToWhitelist(address[] _beneficiaries) external onlyOwner {
-        require(_beneficiaries.length < 101);
-        for (uint256 i = 0; i < _beneficiaries.length; i++) {
-            whitelist[_beneficiaries[i]] = true;
-        }
-    }
-
-    /**
-     * @dev Removes single address from whitelist.
-     * @param _beneficiary Address to be removed to the whitelist
-     */
-    function removeFromWhitelist(address _beneficiary) external onlyOwner {
-        whitelist[_beneficiary] = false;
     }
 
     /**
