@@ -13,6 +13,7 @@ contract('NZOCrowdsale', (accounts) => {
     var buyWeiNew = 6 * 10**17;
     var buyWeiMin = 1 * 10**15;
     var buyWeiLimitWeekZero = Number(8 * 10**18);
+    var buyWeiLimitWeekOther = Number(12 * 10**18);
 
     var fundForSale = 12600 * 10**24;
 
@@ -131,8 +132,10 @@ contract('NZOCrowdsale', (accounts) => {
     });
 
     it('checking the limit of the amount of tokens by stages of sales', async ()  => {
-        var numberTokensLimit = await contract.validPurchaseTokens.call(buyWeiLimitWeekZero);
-        assert.equal(0, Number(numberTokensLimit));
+        //var numberTokensLimit = await contract.validPurchaseTokens.call(buyWeiLimitWeekZero); //test time week Zero
+        //assert.equal(0, Number(numberTokensLimit));
+        var numberTokensLimit = await contract.validPurchaseTokens.call(buyWeiLimitWeekOther); //test time week #1
+        assert.equal(24e18, Number(numberTokensLimit));
         //console.log("numberTokensLimit = " + numberTokensLimit);
     });
 

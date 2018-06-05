@@ -326,7 +326,6 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     //uint256 public rate  = 10; // for test's
 
     mapping (address => uint256) public deposited;
-    mapping(address => bool) public whitelist;
 
     uint256 public constant INITIAL_SUPPLY = 21 * 10**9 * (10 ** uint256(decimals));
     uint256 public    fundForSale = 12600 * 10**6 * (10 ** uint256(decimals));
@@ -339,9 +338,9 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
     //uint256 limitWeekZero = 20 * (10 ** uint256(decimals)); // for tests
     //uint256 limitWeekOther = 10 * (10 ** uint256(decimals)); // for tests
 
-    address public addressFundReserve = 0x0;
-    address public addressFundFoundation = 0x0;
-    address public addressFundTeam = 0x0;
+    address public addressFundReserve = 0x67446E0673418d302dB3552bdF05363dB5Fda9Ce;
+    address public addressFundFoundation = 0xfe3859CB2F9d6f448e9959e6e8Fe0be841c62459;
+    address public addressFundTeam = 0xfeD3B7eaDf1bD15FbE3aA1f1eAfa141efe0eeeb2;
 
     uint256 public startTime = 1530720000; // Wed, 04 Jul 2018 16:00:00 GMT
     // Eastern Standard Time (EST) + 4 hours = Greenwich Mean Time (GMT))
@@ -408,7 +407,7 @@ contract NZOCrowdsale is Ownable, Crowdsale, MintableToken {
             for(uint j = 0; j < numberWeeks; j++){
                 if(currentPeriod == (j + 1)){
                     amountOfTokens = _weiAmount.mul(rate).div(5+j*25);
-                    if (tokenAllocated.add(amountOfTokens) > limitWeekZero + limitWeekOther.mul(j)) {
+                    if (tokenAllocated.add(amountOfTokens) > limitWeekZero + limitWeekOther.mul(j+1)) {
                         emit TokenLimitReached(tokenAllocated, amountOfTokens);
                         return 0;
                     }
