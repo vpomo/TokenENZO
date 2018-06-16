@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>DApp super</title>
+    <script src="js/jquery-3.3.1.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+
+    <style>
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background: url(images/image_1.jpg);
+            -moz-background-size: 100%; /* Firefox 3.6+ */
+            -webkit-background-size: 100%; /* Safari 3.1+ и Chrome 4.0+ */
+            -o-background-size: 100%; /* Opera 9.6+ */
+            background-size: 100%;
+        }
+        .footer {
+            flex: 0 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <br><br>
+    <div class="card">
+        <div class="card-body">
+            <h3 class="text-xs-center">
+                Token ENZO
+            </h3>
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-lg-12">
+                    <div class="card-body">
+                        YOUR ETH WALLET ADDRESS:
+                        <strong id="walletAddress"></strong>
+                        <p></p>
+                        YOUR STAKE:
+                        <strong id="walletTokens"></strong>
+                        <p></p>
+                    </div>
+                </div>
+                <p></p>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 col-sm-4 col-lg-4">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Next window</h6>
+                            <p class="card-text">
+
+                            <p align="left" style="font-size: 10pt;">1 ETH = <strong id="costTokenNextWindow">0</strong> </p>
+                            <p></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-4 col-lg-4">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Sales stats</h6>
+                            <p class="card-text">
+                                ETH:
+                                <strong id="totalEth"></strong>
+                            <p></p>
+                                USD(M):
+                            <strong id="sendTokens"></strong>
+                            <p></p>
+                                Total USD(M):
+                            <strong id="numberTimes"></strong>
+                            <p></p>
+                            Count Investors:
+                            <strong id="countInvestors"></strong>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 col-sm-4 col-lg-4">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Total Sold</h6>
+                            <p class="card-text">
+                                TOTAL SOLD:
+                                <strong id="totalSold"></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+<p></p>
+
+        </div>
+    </div>
+</div>
+<footer >
+    <div class="navbar-fixed-bottom row-fluid">
+        <div class="navbar-inner">
+            <div class="container">
+                <div class="footer-copyright py-3 text-center">
+                    © 2018 Copyright
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+<input id="abiContract" name="abiContract" value="" type="hidden">
+
+<script src="metaScript.js" type="text/javascript" charset="utf-8"></script>
+
+</body>
+</html>
