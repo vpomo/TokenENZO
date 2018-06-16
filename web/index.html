@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>DApp super</title>
+    <title>Token ENZO super</title>
     <script src="js/jquery-3.3.1.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
@@ -51,41 +51,47 @@
                 <div class="col-md-4 col-sm-4 col-lg-4">
                     <div class="card" style="width: 18rem;">
                         <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Sales report</h6>
+                            <p class="card-text">
+                                TOTAL SOLD TOKENS:
+                                <strong id="totalSold"></strong>
+                            <p></p>
+                                TOTAL ETH RECEIVED:
+                                <strong id="totalEth"></strong>
+                            <p></p>
+                            Count of investors:
+                                <strong id="countInvestors"></strong>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 col-sm-4 col-lg-4">
+                    <div class="card" style="width: 18rem;">
+                        <div class="card-body">
                             <h6 class="card-subtitle mb-2 text-muted">Next window</h6>
                             <p class="card-text">
 
-                            <p align="left" style="font-size: 10pt;">1 ETH = <strong id="costTokenNextWindow">0</strong> </p>
+                            <p align="left" style="font-size: 10pt;">1 ETH = <strong id="costTokenNextWindow">0</strong> ENZO</p>
                             <p></p>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4 col-sm-4 col-lg-4">
-                    <div class="card" style="width: 18rem;">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Sales stats</h6>
-                            <p class="card-text">
-                                ETH:
-                                <strong id="totalEth"></strong>
-                            <p></p>
-                                USD(M):
-                            <strong id="sendTokens"></strong>
-                            <p></p>
-                                Total USD(M):
-                            <strong id="numberTimes"></strong>
-                            <p></p>
-                            Count Investors:
-                            <strong id="countInvestors"></strong>
 
-                        </div>
-                    </div>
-                </div>
                 <div class="col-md-4 col-sm-4 col-lg-4">
                     <div class="card" style="width: 18rem;">
                         <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Total Sold</h6>
+                            <h6 class="card-subtitle mb-2 text-muted">Calculating the purchase of tokens</h6>
                             <p class="card-text">
-                                TOTAL SOLD:
-                                <strong id="totalSold"></strong>
+
+                            <p class="text-xs-left">Please, enter a amount of ETH you wish to exchange: </p>
+                            <input id="amountEth" class="form-control-sm" name="amountEth" value="" type="text" placeholder="Input ETH">
+                            <span> &nbsp;&nbsp; </span>
+                            <p></p>
+                            <button class="btn btn-primary btn-sm" id="byTokens" onclick="byTokens();">Calc ENZO</button>
+                            <p></p>
+                            <p align="left" style="font-size: 10pt;">Amount of ENZO you will receive: <strong id="receiveTokens">0</strong> </p>
+
                         </div>
                     </div>
                 </div>

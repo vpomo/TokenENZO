@@ -4,6 +4,10 @@ var walletTokens = 0;
 var step = 0;
 var decimalToken = 10**18;
 
+//var now = Math.round(new Date().getTime() / 1000);
+var now = 1533513600; //Mon, 06 Aug 2018 00:00:00 GMT
+//now = 1534694400; //Mon, 19 Aug 2018 00:00:00 GMT
+
 window.addEventListener('load', function () {
     // Checking if Web3 has been injected by the browser (Mist/MetaMask)
     if (typeof web3 !== 'undefined') {
@@ -28,6 +32,7 @@ function startApp() {
     var adrressContract = adrressContractMain;
     var totalSold;
     var totalEth;
+    var countInvestor;
 
     contract.balanceOf(adrressContract, function (error, data) {
         walletTokens = Number(data) / decimalToken;
@@ -44,36 +49,16 @@ function startApp() {
         console.log("totalEth = " + data);
         $('#totalEth').html(totalEth.toFixed(4));
     });
-
-//document.getElementById('numberTokens').value = Number(data)/10**18;
-}
-
-function checkAddress() {
-    var contract = initContract();
-    var checkingAddress = $('#testAddress').val();
-    console.log("checkingAddress = " + checkingAddress);
-    contract.balanceOf(checkingAddress, function (error, data) {
-        $('#balanceTokens').html(Number(data) / decimalToken);
-    });
-    contract.userTransfered(checkingAddress, function (error, data) {
-        if(data == true){
-            $('#isSent').html("Yes");
-        } else $('#isSent').html("No");
+    contract.countInvestor(function (error, data) {
+        countInvestor = data;
+        console.log("countInvestor = " + data);
+        $('#countInvestors').html(Number(countInvestor));
     });
 }
 
 $(document).ready(function () {
-    var test;
-    var data;
+    calcNextWindow();
 });
-
-function pauseBrowser(millis) {
-    var date = Date.now();
-    var curDate = null;
-    do {
-        curDate = Date.now();
-    } while (curDate - date < millis);
-}
 
 function initContract() {
     var address = {
@@ -96,6 +81,63 @@ function initContract() {
     console.log("myWalletAddress = " + myWalletAddress);
 
     return contract;
+}
+
+function calcNextWindow(){
+    var contract = initContract();
+    var currentPeriod;
+    var nextPeriod;
+    var amountOfTokens = 0;
+    var weiAmount = 1;
+    var rate = 0;
+    var numberWeeks = 46;
+    contract.rate(function (error, data) {
+        rate = data;
+        console.log("rate = " + data);
+        contract.getPeriod(now, function (error, data) {
+            currentPeriod = data;
+            console.log("currentPeriod = " + data);
+            if(currentPeriod < 100){
+                nextPeriod = currentPeriod + 1;
+                for(var j = 0; j < numberWeeks; j++){
+                    if(nextPeriod == (j + 1)){
+                        amountOfTokens = Number(weiAmount*rate)/(5+j*25);
+                    }
+                }
+            }
+            $('#costTokenNextWindow').html(amountOfTokens.toFixed(0));
+        });
+    });
+}
+
+function byTokens(){
+    var contract = initContract();
+    var currentPeriod;
+    var amountOfTokens = 0;
+    var weiAmount = Number($('#amountEth').val());
+    var rate = 0;
+    var numberWeeks = 46;
+    contract.rate(function (error, data) {
+        rate = data;
+        console.log("rate = " + data);
+        contract.getPeriod(now, function (error, data) {
+            currentPeriod = data;
+            console.log("currentPeriod = " + data);
+            console.log("weiAmount = " + weiAmount);
+            if(currentPeriod < 100){
+                if(currentPeriod == 0){
+                    amountOfTokens = Number(weiAmount*rate)/4;
+                }
+                for(var j = 0; j < numberWeeks; j++){
+                    if(currentPeriod == (j + 1)){
+                        amountOfTokens = Number(weiAmount*rate)/(5+j*25);
+                    }
+                }
+            }
+            console.log("amountOfTokens = " + amountOfTokens);
+            $('#receiveTokens').html(amountOfTokens.toFixed(4));
+        });
+    });
 }
 
 function resetting() {
